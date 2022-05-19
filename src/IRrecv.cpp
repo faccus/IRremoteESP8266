@@ -1114,6 +1114,10 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
     DPRINTLN("Attempting Carrier AC 128-bit decode");
     if (decodeCarrierAC128(results, offset)) return true;
 #endif  // DECODE_CARRIER_AC128
+#if DECODE_TCL96AC
+    DPRINTLN("Attempting TCL AC 96-bit decode");
+    if (decodeTcl96Ac(results, offset)) return true;
+#endif  // DECODE_TCL96AC
   // Typically new protocols are added above this line.
   }
 #if DECODE_HASH
