@@ -900,7 +900,7 @@ void IRsend::sendMitsubishi136(const unsigned char data[],
   sendGeneric(kMitsubishi136HdrMark, kMitsubishi136HdrSpace,
               kMitsubishi136BitMark, kMitsubishi136OneSpace,
               kMitsubishi136BitMark, kMitsubishi136ZeroSpace,
-              kMitsubishi136BitMark, kMitsubishi136Gap,
+              kMitsubishiAcRptMark, kMitsubishiAcRptSpace,
               data, nbytes, 38, false, repeat, 50);
 }
 #endif  // SEND_MITSUBISHI136
