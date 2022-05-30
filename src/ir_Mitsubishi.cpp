@@ -66,11 +66,11 @@ const uint16_t kMitsubishiAcRptSpace = 15500;
 const uint8_t  kMitsubishiAcExtraTolerance = 5;
 
 // Mitsubishi 136 bit A/C
-const uint16_t kMitsubishi136HdrMark = 3400//3324;
-const uint16_t kMitsubishi136HdrSpace = 1750//1474;
-const uint16_t kMitsubishi136BitMark = 450//467;
-const uint16_t kMitsubishi136OneSpace = 1300//1137;
-const uint16_t kMitsubishi136ZeroSpace = 420//351;
+const uint16_t kMitsubishi136HdrMark = 3400;//3324;
+const uint16_t kMitsubishi136HdrSpace = 1750;//1474;
+const uint16_t kMitsubishi136BitMark = 450;//467;
+const uint16_t kMitsubishi136OneSpace = 1300;//1137;
+const uint16_t kMitsubishi136ZeroSpace = 420;//351;
 const uint32_t kMitsubishi136Gap = kDefaultMessageGap;
 
 // Mitsubishi 112 bit A/C
