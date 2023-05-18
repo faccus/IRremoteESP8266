@@ -399,10 +399,22 @@ void IRrecv::disableIRIn(void) {
 #endif  // ESP8266
 #if defined(ESP32)
   timerAlarmDisable(timer);
+  timerDetachInterrupt(timer);
   timerEnd(timer);
 #endif  // ESP32
   detachInterrupt(params.recvpin);
 #endif  // UNIT_TEST
+}
+
+/// Pause collection of received IR data.
+/// @see IRrecv class constructor
+void IRrecv::pause(void) {
+  params.rcvstate = kStopState;
+  params.rawlen = 0;
+  params.overflow = false;
+#if defined(ESP32)
+  gpio_intr_disable((gpio_num_t)params.recvpin);
+#endif  // ESP32
 }
 
 /// Resume collection of received IR data.
@@ -415,6 +427,7 @@ void IRrecv::resume(void) {
   params.overflow = false;
 #if defined(ESP32)
   timerAlarmDisable(timer);
+  gpio_intr_enable((gpio_num_t)params.recvpin);
 #endif  // ESP32
 }
 
@@ -689,9 +702,12 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
       return true;
 #endif
 #if DECODE_PANASONIC
-    DPRINTLN("Attempting Panasonic decode");
+    DPRINTLN("Attempting Panasonic (48-bit) decode");
     if (decodePanasonic(results, offset)) return true;
-#endif
+    DPRINTLN("Attempting Panasonic (40-bit) decode");
+    if (decodePanasonic(results, offset, kPanasonic40Bits, true,
+                        kPanasonic40Manufacturer)) return true;
+#endif  // DECODE_PANASONIC
 #if DECODE_LG
     DPRINTLN("Attempting LG (28-bit) decode");
     if (decodeLG(results, offset, kLgBits, true)) return true;
@@ -729,6 +745,11 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
     DPRINTLN("Attempting Sharp decode");
     if (decodeSharp(results, offset)) return true;
 #endif
+#if DECODE_BOSCH144
+    DPRINTLN("Attempting Bosch 144-bit decode");
+    // Bosch is similar to Coolix, so it must be attempted before decodeCOOLIX.
+    if (decodeBosch144(results, offset)) return true;
+#endif  // DECODE_BOSCH144
 #if DECODE_COOLIX
     DPRINTLN("Attempting Coolix 24-bit decode");
     if (decodeCOOLIX(results, offset)) return true;
@@ -926,8 +947,21 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
       return true;
 #endif
 #if DECODE_ARGO
-    DPRINTLN("Attempting Argo decode");
-    if (decodeArgo(results, offset)) return true;
+  DPRINTLN("Attempting Argo WREM3 decode (AC Control)");
+  if (decodeArgoWREM3(results, offset, kArgo3AcControlStateLength * 8, true))
+    return true;
+  DPRINTLN("Attempting Argo WREM3 decode (iFeel report)");
+  if (decodeArgoWREM3(results, offset, kArgo3iFeelReportStateLength * 8, true))
+    return true;
+  DPRINTLN("Attempting Argo WREM3 decode (Config)");
+  if (decodeArgoWREM3(results, offset, kArgo3ConfigStateLength * 8, true))
+    return true;
+  DPRINTLN("Attempting Argo WREM3 decode (Timer)");
+  if (decodeArgoWREM3(results, offset, kArgo3TimerStateLength * 8, true))
+    return true;
+  DPRINTLN("Attempting Argo WREM2 decode");
+    if (decodeArgo(results, offset, kArgoBits) ||
+        decodeArgo(results, offset, kArgoShortBits, false)) return true;
 #endif  // DECODE_ARGO
 #if DECODE_SHARP_AC
     DPRINTLN("Attempting SHARP_AC decode");
@@ -1119,6 +1153,38 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
     if (decodeToto(results, offset, kTotoLongBits) ||  // Long needs to be first
         decodeToto(results, offset, kTotoShortBits)) return true;
 #endif  // DECODE_TOTO
+#if DECODE_CLIMABUTLER
+    DPRINTLN("Attempting ClimaButler decode");
+    if (decodeClimaButler(results)) return true;
+#endif  // DECODE_CLIMABUTLER
+#if DECODE_TCL96AC
+    DPRINTLN("Attempting TCL AC 96-bit decode");
+    if (decodeTcl96Ac(results, offset)) return true;
+#endif  // DECODE_TCL96AC
+#if DECODE_SANYO_AC152
+    DPRINTLN("Attempting Sanyo AC 152-bit decode");
+    if (decodeSanyoAc152(results, offset)) return true;
+#endif  // DECODE_SANYO_AC152
+#if DECODE_DAIKIN312
+    DPRINTLN("Attempting Daikin 312-bit decode");
+    if (decodeDaikin312(results, offset)) return true;
+#endif  // DECODE_DAIKIN312
+#if DECODE_GORENJE
+    DPRINTLN("Attempting GORENJE decode");
+    if (decodeGorenje(results, offset)) return true;
+#endif  // DECODE_GORENJE
+#if DECODE_WOWWEE
+    DPRINTLN("Attempting WOWWEE decode");
+    if (decodeWowwee(results, offset)) return true;
+#endif  // DECODE_WOWWEE
+#if DECODE_CARRIER_AC84
+    DPRINTLN("Attempting Carrier A/C 84-bit decode");
+    if (decodeCarrierAC84(results, offset)) return true;
+#endif  // DECODE_CARRIER_AC84
+#if DECODE_YORK
+    DPRINTLN("Attempting York decode");
+    if (decodeYork(results, offset, kYorkBits)) return true;
+#endif  // DECODE_YORK
   // Typically new protocols are added above this line.
   }
 #if DECODE_HASH

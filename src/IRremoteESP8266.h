@@ -58,10 +58,10 @@
 // Minor version number (x.X.x)
 #define _IRREMOTEESP8266_VERSION_MINOR 8
 // Patch version number (x.x.X)
-#define _IRREMOTEESP8266_VERSION_PATCH 2
+#define _IRREMOTEESP8266_VERSION_PATCH 5
 // Macro to convert version info into an integer
 #define _IRREMOTEESP8266_VERSION_VAL(major, minor, patch) \
-                                    ((major << 16) | (minor << 8) | (patch))
+                                    (((major) << 16) | ((minor) << 8) | (patch))
 // Macro to convert literal into a string
 #define MKSTR_HELPER(x) #x
 #define MKSTR(x) MKSTR_HELPER(x)
@@ -237,6 +237,13 @@
 #ifndef SEND_SANYO_AC88
 #define SEND_SANYO_AC88        _IR_ENABLE_DEFAULT_
 #endif  // SEND_SANYO_AC88
+
+#ifndef DECODE_SANYO_AC152
+#define DECODE_SANYO_AC152     _IR_ENABLE_DEFAULT_
+#endif  // DECODE_SANYO_AC152
+#ifndef SEND_SANYO_AC152
+#define SEND_SANYO_AC152       _IR_ENABLE_DEFAULT_
+#endif  // SEND_SANYO_AC152
 
 #ifndef DECODE_MITSUBISHI
 #define DECODE_MITSUBISHI      _IR_ENABLE_DEFAULT_
@@ -609,6 +616,13 @@
 #define SEND_TECO              _IR_ENABLE_DEFAULT_
 #endif  // SEND_TECO
 
+#ifndef DECODE_TCL96AC
+#define DECODE_TCL96AC        _IR_ENABLE_DEFAULT_
+#endif  // DECODE_TCL96AC
+#ifndef SEND_TCL96AC
+#define SEND_TCL96AC          _IR_ENABLE_DEFAULT_
+#endif  // SEND_TCL96AC
+
 #ifndef DECODE_TCL112AC
 #define DECODE_TCL112AC        _IR_ENABLE_DEFAULT_
 #endif  // DECODE_TCL112AC
@@ -889,6 +903,55 @@
 #define SEND_TOTO           _IR_ENABLE_DEFAULT_
 #endif  // SEND_TOTO
 
+#ifndef DECODE_CLIMABUTLER
+#define DECODE_CLIMABUTLER  _IR_ENABLE_DEFAULT_
+#endif  // DECODE_CLIMABUTLER
+#ifndef SEND_CLIMABUTLER
+#define SEND_CLIMABUTLER    _IR_ENABLE_DEFAULT_
+#endif  // SEND_CLIMABUTLER
+
+#ifndef DECODE_BOSCH144
+#define DECODE_BOSCH144     _IR_ENABLE_DEFAULT_
+#endif  // DECODE_BOSCH144
+#ifndef SEND_BOSCH144
+#define SEND_BOSCH144       _IR_ENABLE_DEFAULT_
+#endif  // SEND_BOSCH144
+
+#ifndef DECODE_DAIKIN312
+#define DECODE_DAIKIN312    _IR_ENABLE_DEFAULT_
+#endif  // DECODE_DAIKIN312
+#ifndef SEND_DAIKIN312
+#define SEND_DAIKIN312      _IR_ENABLE_DEFAULT_
+#endif  // SEND_DAIKIN312
+
+#ifndef DECODE_GORENJE
+#define DECODE_GORENJE      _IR_ENABLE_DEFAULT_
+#endif  // DECODE_GORENJE
+#ifndef SEND_GORENJE
+#define SEND_GORENJE        _IR_ENABLE_DEFAULT_
+#endif  // SEND_GORENJE
+
+#ifndef DECODE_WOWWEE
+#define DECODE_WOWWEE      _IR_ENABLE_DEFAULT_
+#endif  // DECODE_WOWWEE
+#ifndef SEND_WOWWEE
+#define SEND_WOWWEE        _IR_ENABLE_DEFAULT_
+#endif  // SEND_WOWWEE
+
+#ifndef DECODE_CARRIER_AC84
+#define DECODE_CARRIER_AC84 _IR_ENABLE_DEFAULT_
+#endif  // DECODE_CARRIER_AC84
+#ifndef SEND_CARRIER_AC84
+#define SEND_CARRIER_AC84   _IR_ENABLE_DEFAULT_
+#endif  // SEND_CARRIER_AC84
+
+#ifndef DECODE_YORK
+#define DECODE_YORK         _IR_ENABLE_DEFAULT_
+#endif  // DECODE_YORK
+#ifndef SEND_YORK
+#define SEND_YORK           _IR_ENABLE_DEFAULT_
+#endif  // SEND_YORK
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -905,7 +968,9 @@
      DECODE_TEKNOPOINT || DECODE_KELON || DECODE_TROTEC_3550 || \
      DECODE_SANYO_AC88 || DECODE_RHOSS || DECODE_HITACHI_AC264 || \
      DECODE_KELON168 || DECODE_HITACHI_AC296 || DECODE_CARRIER_AC128 || \
-     DECODE_DAIKIN200 || SEND_HAIER_AC160 || \
+     DECODE_DAIKIN200 || DECODE_HAIER_AC160 || DECODE_TCL96AC || \
+     DECODE_BOSCH144 || DECODE_SANYO_AC152 || DECODE_DAIKIN312 || \
+     DECODE_CARRIER_AC84 || DECODE_YORK || \
      false)
   // Add any DECODE to the above if it uses result->state (see kStateSizeMax)
   // you might also want to add the protocol to hasACState function
@@ -1063,8 +1128,17 @@ enum decode_type_t {
   HAIER_AC160,  // 115
   CARRIER_AC128,
   TOTO,
+  CLIMABUTLER,
+  TCL96AC,
+  BOSCH144,  // 120
+  SANYO_AC152,
+  DAIKIN312,
+  GORENJE,
+  WOWWEE,
+  CARRIER_AC84,  // 125
+  YORK,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = TOTO,
+  kLastDecodeType = YORK,
 };
 
 // Message lengths & required repeat values
@@ -1082,9 +1156,17 @@ const uint16_t kAmcorStateLength = 8;
 const uint16_t kAmcorBits = kAmcorStateLength * 8;
 const uint16_t kAmcorDefaultRepeat = kSingleRepeat;
 const uint16_t kArgoStateLength = 12;
+const uint16_t kArgoShortStateLength = 4;
 const uint16_t kArgoBits = kArgoStateLength * 8;
+const uint16_t kArgoShortBits = kArgoShortStateLength * 8;
+const uint16_t kArgo3AcControlStateLength = 6;  // Bytes
+const uint16_t kArgo3iFeelReportStateLength = 2;  // Bytes
+const uint16_t kArgo3TimerStateLength = 9;  // Bytes
+const uint16_t kArgo3ConfigStateLength = 4;  // Bytes
 const uint16_t kArgoDefaultRepeat = kNoRepeat;
 const uint16_t kArrisBits = 32;
+const uint16_t kBosch144StateLength = 18;
+const uint16_t kBosch144Bits = kBosch144StateLength * 8;
 const uint16_t kCoolixBits = 24;
 const uint16_t kCoolix48Bits = kCoolixBits * 2;
 const uint16_t kCoolixDefaultRepeat = kSingleRepeat;
@@ -1094,6 +1176,9 @@ const uint16_t kCarrierAc40Bits = 40;
 const uint16_t kCarrierAc40MinRepeat = 2;
 const uint16_t kCarrierAc64Bits = 64;
 const uint16_t kCarrierAc64MinRepeat = kNoRepeat;
+const uint16_t kCarrierAc84StateLength = 11;
+const uint16_t kCarrierAc84Bits = kCarrierAc84StateLength * 8 - 4;
+const uint16_t kCarrierAc84MinRepeat = kNoRepeat;
 const uint16_t kCarrierAc128StateLength = 16;
 const uint16_t kCarrierAc128Bits = kCarrierAc128StateLength * 8;
 const uint16_t kCarrierAc128MinRepeat = kNoRepeat;
@@ -1129,6 +1214,9 @@ const uint16_t kDaikin200DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin216StateLength = 27;
 const uint16_t kDaikin216Bits = kDaikin216StateLength * 8;
 const uint16_t kDaikin216DefaultRepeat = kNoRepeat;
+const uint16_t kDaikin312StateLength = 39;
+const uint16_t kDaikin312Bits = kDaikin312StateLength * 8;
+const uint16_t kDaikin312DefaultRepeat = kNoRepeat;
 const uint16_t kDelonghiAcBits = 64;
 const uint16_t kDelonghiAcDefaultRepeat = kNoRepeat;
 const uint16_t kTechnibelAcBits = 56;
@@ -1157,6 +1245,7 @@ const uint16_t kGicableBits = 16;
 const uint16_t kGicableMinRepeat = kSingleRepeat;
 const uint16_t kGoodweatherBits = 48;
 const uint16_t kGoodweatherMinRepeat = kNoRepeat;
+const uint16_t kGorenjeBits = 8;
 const uint16_t kGreeStateLength = 8;
 const uint16_t kGreeBits = kGreeStateLength * 8;
 const uint16_t kGreeDefaultRepeat = kNoRepeat;
@@ -1246,6 +1335,8 @@ const uint16_t kNeoclimaBits = kNeoclimaStateLength * 8;
 const uint16_t kNeoclimaMinRepeat = kNoRepeat;
 const uint16_t kPanasonicBits = 48;
 const uint32_t kPanasonicManufacturer = 0x4004;
+const uint32_t kPanasonic40Manufacturer = 0x34;
+const uint16_t kPanasonic40Bits = 40;
 const uint16_t kPanasonicAcStateLength = 27;
 const uint16_t kPanasonicAcStateShortLength = 16;
 const uint16_t kPanasonicAcBits = kPanasonicAcStateLength * 8;
@@ -1272,6 +1363,9 @@ const uint16_t kSanyoAcBits = kSanyoAcStateLength * 8;
 const uint16_t kSanyoAc88StateLength = 11;
 const uint16_t kSanyoAc88Bits = kSanyoAc88StateLength * 8;
 const uint16_t kSanyoAc88MinRepeat = 2;
+const uint16_t kSanyoAc152StateLength = 19;
+const uint16_t kSanyoAc152Bits = kSanyoAc152StateLength * 8;
+const uint16_t kSanyoAc152MinRepeat = kNoRepeat;
 const uint16_t kSanyoSA8650BBits = 12;
 const uint16_t kSanyoLC7461AddressBits = 13;
 const uint16_t kSanyoLC7461CommandBits = 8;
@@ -1292,6 +1386,9 @@ const uint16_t kSonyMinBits = 12;
 const uint16_t kSonyMinRepeat = 2;
 const uint16_t kSymphonyBits = 12;
 const uint16_t kSymphonyDefaultRepeat = 3;
+const uint16_t kTcl96AcStateLength = 12;
+const uint16_t kTcl96AcBits = kTcl96AcStateLength * 8;
+const uint16_t kTcl96AcDefaultRepeat = kNoRepeat;
 const uint16_t kTcl112AcStateLength = 14;
 const uint16_t kTcl112AcBits = kTcl112AcStateLength * 8;
 const uint16_t kTcl112AcDefaultRepeat = kNoRepeat;
@@ -1320,6 +1417,8 @@ const uint16_t kWhirlpoolAcStateLength = 21;
 const uint16_t kWhirlpoolAcBits = kWhirlpoolAcStateLength * 8;
 const uint16_t kWhirlpoolAcDefaultRepeat = kNoRepeat;
 const uint16_t kWhynterBits = 32;
+const uint16_t kWowweeBits = 11;
+const uint16_t kWowweeDefaultRepeat = kNoRepeat;
 const uint8_t  kVestelAcBits = 56;
 const uint16_t kXmpBits = 64;
 const uint16_t kZepealBits = 16;
@@ -1333,6 +1432,9 @@ const uint16_t kBoseBits = 16;
 const uint16_t kRhossStateLength = 12;
 const uint16_t kRhossBits = kRhossStateLength * 8;
 const uint16_t kRhossDefaultRepeat = 0;
+const uint16_t kClimaButlerBits = 52;
+const uint16_t kYorkBits = 136;
+const uint16_t kYorkStateLength = 17;
 
 
 // Legacy defines. (Deprecated)
